@@ -31,7 +31,7 @@ import Window
 -- The full application state of our todo app.
 type alias Model =
     { tasks : List Task
-    , field : String
+    , newTask : String
     , uid : Int
     , visibility : String
     }
@@ -58,7 +58,7 @@ emptyModel : Model
 emptyModel =
     { tasks = []
     , visibility = "All"
-    , field = ""
+    , newTask = ""
     , uid = 0
     }
 
@@ -73,7 +73,7 @@ type Action
     | TaskAction Task_Update
 
 type Task_Update
-    = UpdateField String
+    = UpdateNewTask String
     | EditingTask Int Bool
     | UpdateTask Int String
     | Add
@@ -95,14 +95,14 @@ update action model =
           Add ->
             { model |
                 uid = model.uid + 1,
-                field = "",
+                newTask = "",
                 tasks =
-                if String.isEmpty model.field
+                if String.isEmpty model.newTask
                 then model.tasks
-                else model.tasks ++ [newTask model.field model.uid]
+                else model.tasks ++ [newTask model.newTask model.uid]
             }
-          UpdateField str ->
-              { model | field = str }
+          UpdateNewTask str ->
+              { model | newTask = str }
 
           EditingTask id isEditing ->
               let updateTask t = if t.id == id then { t | editing = isEditing } else t
@@ -143,7 +143,7 @@ view address model =
       ]
       [ section
           [ id "todoapp" ]
-          [ lazy2 taskEntry address model.field
+          [ lazy2 taskEntry address model.newTask
           , lazy3 taskList address model.visibility model.tasks
           , lazy3 controls address model.visibility model.tasks
           ]
@@ -174,7 +174,7 @@ taskEntry address task =
           , autofocus True
           , value task
           , name "newTodo"
-          , on "input" targetValue (Signal.message address << (TaskAction << UpdateField))
+          , on "input" targetValue (Signal.message address << (TaskAction << UpdateNewTask))
           , onEnter address (TaskAction Add)
           ]
           []
