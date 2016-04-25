@@ -70,7 +70,10 @@ emptyModel =
 -- some alternatives: https://github.com/evancz/elm-architecture-tutorial/
 type Action
     = NoOp
-    | UpdateField String
+    | TaskAction Task_Update
+
+type Task_Update
+    = UpdateField String
     | EditingTask Int Bool
     | UpdateTask Int String
     | Add
@@ -87,48 +90,48 @@ update action model =
     case action of
       NoOp -> model
 
-      Add ->
-          { model |
-              uid = model.uid + 1,
-              field = "",
-              tasks =
-                  if String.isEmpty model.field
-                    then model.tasks
-                    else model.tasks ++ [newTask model.field model.uid]
-          }
+      TaskAction tu ->
+        case tu of
+          Add ->
+            { model |
+                uid = model.uid + 1,
+                field = "",
+                tasks =
+                if String.isEmpty model.field
+                then model.tasks
+                else model.tasks ++ [newTask model.field model.uid]
+            }
+          UpdateField str ->
+              { model | field = str }
 
-      UpdateField str ->
-          { model | field = str }
+          EditingTask id isEditing ->
+              let updateTask t = if t.id == id then { t | editing = isEditing } else t
+              in
+                  { model | tasks = List.map updateTask model.tasks }
 
-      EditingTask id isEditing ->
-          let updateTask t = if t.id == id then { t | editing = isEditing } else t
-          in
-              { model | tasks = List.map updateTask model.tasks }
+          UpdateTask id task ->
+              let updateTask t = if t.id == id then { t | description = task } else t
+              in
+                  { model | tasks = List.map updateTask model.tasks }
 
-      UpdateTask id task ->
-          let updateTask t = if t.id == id then { t | description = task } else t
-          in
-              { model | tasks = List.map updateTask model.tasks }
+          Delete id ->
+              { model | tasks = List.filter (\t -> t.id /= id) model.tasks }
 
-      Delete id ->
-          { model | tasks = List.filter (\t -> t.id /= id) model.tasks }
+          DeleteComplete ->
+              { model | tasks = List.filter (not << .completed) model.tasks }
 
-      DeleteComplete ->
-          { model | tasks = List.filter (not << .completed) model.tasks }
+          Check id isCompleted ->
+              let updateTask t = if t.id == id then { t | completed = isCompleted } else t
+              in
+                  { model | tasks = List.map updateTask model.tasks }
 
-      Check id isCompleted ->
-          let updateTask t = if t.id == id then { t | completed = isCompleted } else t
-          in
-              { model | tasks = List.map updateTask model.tasks }
+          CheckAll isCompleted ->
+              let updateTask t = { t | completed = isCompleted }
+              in
+                  { model | tasks = List.map updateTask model.tasks }
 
-      CheckAll isCompleted ->
-          let updateTask t = { t | completed = isCompleted }
-          in
-              { model | tasks = List.map updateTask model.tasks }
-
-      ChangeVisibility visibility ->
-          { model | visibility = visibility }
-
+          ChangeVisibility visibility ->
+              { model | visibility = visibility }
 
 ---- VIEW ----
 
@@ -171,8 +174,8 @@ taskEntry address task =
           , autofocus True
           , value task
           , name "newTodo"
-          , on "input" targetValue (Signal.message address << UpdateField)
-          , onEnter address Add
+          , on "input" targetValue (Signal.message address << (TaskAction << UpdateField))
+          , onEnter address (TaskAction Add)
           ]
           []
       ]
@@ -199,7 +202,7 @@ taskList address visibility tasks =
           , type' "checkbox"
           , name "toggle"
           , checked allCompleted
-          , onClick address (CheckAll (not allCompleted))
+          , onClick address (TaskAction (CheckAll (not allCompleted)))
           ]
           []
       , label
@@ -221,15 +224,15 @@ todoItem address todo =
               [ class "toggle"
               , type' "checkbox"
               , checked todo.completed
-              , onClick address (Check todo.id (not todo.completed))
+              , onClick address (TaskAction (Check todo.id (not todo.completed)))
               ]
               []
           , label
-              [ onDoubleClick address (EditingTask todo.id True) ]
+              [ onDoubleClick address (TaskAction (EditingTask todo.id True)) ]
               [ text todo.description ]
           , button
               [ class "destroy"
-              , onClick address (Delete todo.id)
+              , onClick address (TaskAction (Delete todo.id))
               ]
               []
           ]
@@ -238,9 +241,9 @@ todoItem address todo =
           , value todo.description
           , name "title"
           , id ("todo-" ++ toString todo.id)
-          , on "input" targetValue (Signal.message address << UpdateTask todo.id)
-          , onBlur address (EditingTask todo.id False)
-          , onEnter address (EditingTask todo.id False)
+          , on "input" targetValue (Signal.message address << (TaskAction << UpdateTask todo.id))
+          , onBlur address (TaskAction (EditingTask todo.id False))
+          , onEnter address (TaskAction (EditingTask todo.id False))
           ]
           []
       ]
@@ -273,7 +276,7 @@ controls address visibility tasks =
           [ class "clear-completed"
           , id "clear-completed"
           , hidden (tasksCompleted == 0)
-          , onClick address DeleteComplete
+          , onClick address (TaskAction DeleteComplete)
           ]
           [ text ("Clear completed (" ++ toString tasksCompleted ++ ")") ]
       ]
@@ -282,7 +285,7 @@ controls address visibility tasks =
 visibilitySwap : Address Action -> String -> String -> String -> Html
 visibilitySwap address uri visibility actualVisibility =
     li
-      [ onClick address (ChangeVisibility visibility) ]
+      [ onClick address (TaskAction (ChangeVisibility visibility)) ]
       [ a [ href uri, classList [("selected", visibility == actualVisibility)] ] [ text visibility ] ]
 
 
@@ -330,16 +333,16 @@ port focus : Signal String
 port focus =
     let needsFocus act =
             case act of
-              EditingTask id bool -> bool
+              TaskAction (EditingTask id bool) -> bool
               _ -> False
 
         toSelector act =
             case act of
-              EditingTask id _ -> "#todo-" ++ toString id
+              TaskAction (EditingTask id _) -> "#todo-" ++ toString id
               _ -> ""
     in
         actions.signal
-          |> Signal.filter needsFocus (EditingTask 0 True)
+          |> Signal.filter needsFocus (TaskAction (EditingTask 0 True))
           |> Signal.map toSelector
 
 
