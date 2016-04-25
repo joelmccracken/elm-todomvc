@@ -166,8 +166,8 @@ is13 code =
   if code == 13 then Ok () else Err "not the right key code"
 
 
-taskEntry : Address Action -> String -> Html
-taskEntry address task =
+task_newTaskEntry : Address Action -> String -> Html
+task_newTaskEntry address task =
     header
       [ id "header" ]
       [ h1 [] [ text "todos" ]
@@ -184,8 +184,8 @@ taskEntry address task =
       ]
 
 
-taskList : Address Action -> String -> List Task -> Html
-taskList address visibility tasks =
+task_list : Address Action -> String -> List Task -> Html
+task_list address visibility tasks =
     let isVisible todo =
             case visibility of
               "Completed" -> todo.completed
@@ -213,12 +213,12 @@ taskList address visibility tasks =
           [ text "Mark all as complete" ]
       , ul
           [ id "todo-list" ]
-          (List.map (todoItem address) (List.filter isVisible tasks))
+          (List.map (task_item address) (List.filter isVisible tasks))
       ]
 
 
-todoItem : Address Action -> Task -> Html
-todoItem address todo =
+task_item : Address Action -> Task -> Html
+task_item address todo =
     li
       [ classList [ ("completed", todo.completed), ("editing", todo.editing) ] ]
       [ div
@@ -252,8 +252,8 @@ todoItem address todo =
       ]
 
 
-controls : Address Action -> String -> List Task -> Html
-controls address visibility tasks =
+task_controls : Address Action -> String -> List Task -> Html
+task_controls address visibility tasks =
     let tasksCompleted = List.length (List.filter .completed tasks)
         tasksLeft = List.length tasks - tasksCompleted
         item_ = if tasksLeft == 1 then " item" else " items"
@@ -269,11 +269,11 @@ controls address visibility tasks =
           ]
       , ul
           [ id "filters" ]
-          [ visibilitySwap address "#/" "All" visibility
+          [ task_visibilitySwap address "#/" "All" visibility
           , text " "
-          , visibilitySwap address "#/active" "Active" visibility
+          , task_visibilitySwap address "#/active" "Active" visibility
           , text " "
-          , visibilitySwap address "#/completed" "Completed" visibility
+          , task_visibilitySwap address "#/completed" "Completed" visibility
           ]
       , button
           [ class "clear-completed"
@@ -285,8 +285,8 @@ controls address visibility tasks =
       ]
 
 
-visibilitySwap : Address Action -> String -> String -> String -> Html
-visibilitySwap address uri visibility actualVisibility =
+task_visibilitySwap : Address Action -> String -> String -> String -> Html
+task_visibilitySwap address uri visibility actualVisibility =
     li
       [ onClick address (TaskAction (ChangeVisibility visibility)) ]
       [ a [ href uri, classList [("selected", visibility == actualVisibility)] ] [ text visibility ] ]
