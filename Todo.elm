@@ -24,7 +24,7 @@ import Json.Decode as Json
 import Signal exposing (Signal, Address)
 import String
 import Window
-
+import EF.Task exposing (..)
 
 ---- MODEL ----
 
@@ -70,19 +70,7 @@ emptyModel =
 -- some alternatives: https://github.com/evancz/elm-architecture-tutorial/
 type Action
     = NoOp
-    | TaskAction Task_Update
-
-type Task_Update
-    = UpdateNewTask String
-    | EditingTask Int Bool
-    | UpdateTask Int String
-    | Add
-    | Delete Int
-    | DeleteComplete
-    | Check Int Bool
-    | CheckAll Bool
-    | ChangeVisibility String
-
+    | TaskAction EF.Task.Update
 
 -- How we update our Model on a given Action?
 update : Action -> Model -> Model
@@ -92,7 +80,7 @@ update action model =
       TaskAction tu -> task_update tu model
 
 
-task_update : Task_Update -> Model -> Model
+task_update : EF.Task.Update -> Model -> Model
 task_update tu model =
     case tu of
         Add ->
@@ -150,7 +138,7 @@ view address model =
       ]
 
 
-task_view : Address Task_Update -> Model -> Html
+task_view : Address EF.Task.Update -> Model -> Html
 task_view address model =
   section
     [ id "todoapp" ]
@@ -171,7 +159,7 @@ is13 code =
   if code == 13 then Ok () else Err "not the right key code"
 
 
-task_newTaskEntry : Address Task_Update -> String -> Html
+task_newTaskEntry : Address EF.Task.Update -> String -> Html
 task_newTaskEntry address task =
     header
       [ id "header" ]
@@ -189,7 +177,7 @@ task_newTaskEntry address task =
       ]
 
 
-task_list : Address Task_Update -> String -> List Task -> Html
+task_list : Address EF.Task.Update -> String -> List Task -> Html
 task_list address visibility tasks =
     let isVisible todo =
             case visibility of
@@ -222,7 +210,7 @@ task_list address visibility tasks =
       ]
 
 
-task_item : Address Task_Update -> Task -> Html
+task_item : Address EF.Task.Update -> Task -> Html
 task_item address todo =
     li
       [ classList [ ("completed", todo.completed), ("editing", todo.editing) ] ]
@@ -257,7 +245,7 @@ task_item address todo =
       ]
 
 
-task_controls : Address Task_Update -> String -> List Task -> Html
+task_controls : Address EF.Task.Update -> String -> List Task -> Html
 task_controls address visibility tasks =
     let tasksCompleted = List.length (List.filter .completed tasks)
         tasksLeft = List.length tasks - tasksCompleted
@@ -290,7 +278,7 @@ task_controls address visibility tasks =
       ]
 
 
-task_visibilitySwap : Address Task_Update -> String -> String -> String -> Html
+task_visibilitySwap : Address EF.Task.Update -> String -> String -> String -> Html
 task_visibilitySwap address uri visibility actualVisibility =
     li
       [ onClick address ((ChangeVisibility visibility)) ]
