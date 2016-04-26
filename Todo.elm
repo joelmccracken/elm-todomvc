@@ -144,15 +144,20 @@ view address model =
       [ class "todomvc-wrapper"
       , style [ ("visibility", "hidden") ]
       ]
-      [ section
-          [ id "todoapp" ]
-          [ lazy2 taskEntry address model.newTask
-          , lazy3 taskList address model.visibility model.tasks
-          , lazy3 controls address model.visibility model.tasks
-          ]
+      [
+       task_view (Signal.forwardTo address TaskAction) model
       , infoFooter
       ]
 
+
+task_view : Address Task_Update -> Model -> Html
+task_view address model =
+  section
+    [ id "todoapp" ]
+    [ lazy2 task_newTaskEntry address model.newTask
+    , lazy3 task_list address model.visibility model.tasks
+    , lazy3 task_controls address model.visibility model.tasks
+    ]
 
 onEnter : Address a -> a -> Attribute
 onEnter address value =
@@ -166,7 +171,7 @@ is13 code =
   if code == 13 then Ok () else Err "not the right key code"
 
 
-task_newTaskEntry : Address Action -> String -> Html
+task_newTaskEntry : Address Task_Update -> String -> Html
 task_newTaskEntry address task =
     header
       [ id "header" ]
@@ -177,14 +182,14 @@ task_newTaskEntry address task =
           , autofocus True
           , value task
           , name "newTodo"
-          , on "input" targetValue (Signal.message address << (TaskAction << UpdateNewTask))
-          , onEnter address (TaskAction Add)
+          , on "input" targetValue (Signal.message address << (UpdateNewTask))
+          , onEnter address (Add)
           ]
           []
       ]
 
 
-task_list : Address Action -> String -> List Task -> Html
+task_list : Address Task_Update -> String -> List Task -> Html
 task_list address visibility tasks =
     let isVisible todo =
             case visibility of
@@ -205,7 +210,7 @@ task_list address visibility tasks =
           , type' "checkbox"
           , name "toggle"
           , checked allCompleted
-          , onClick address (TaskAction (CheckAll (not allCompleted)))
+          , onClick address ((CheckAll (not allCompleted)))
           ]
           []
       , label
@@ -217,7 +222,7 @@ task_list address visibility tasks =
       ]
 
 
-task_item : Address Action -> Task -> Html
+task_item : Address Task_Update -> Task -> Html
 task_item address todo =
     li
       [ classList [ ("completed", todo.completed), ("editing", todo.editing) ] ]
@@ -227,15 +232,15 @@ task_item address todo =
               [ class "toggle"
               , type' "checkbox"
               , checked todo.completed
-              , onClick address (TaskAction (Check todo.id (not todo.completed)))
+              , onClick address (Check todo.id (not todo.completed))
               ]
               []
           , label
-              [ onDoubleClick address (TaskAction (EditingTask todo.id True)) ]
+              [ onDoubleClick address ((EditingTask todo.id True)) ]
               [ text todo.description ]
           , button
               [ class "destroy"
-              , onClick address (TaskAction (Delete todo.id))
+              , onClick address ((Delete todo.id))
               ]
               []
           ]
@@ -244,15 +249,15 @@ task_item address todo =
           , value todo.description
           , name "title"
           , id ("todo-" ++ toString todo.id)
-          , on "input" targetValue (Signal.message address << (TaskAction << UpdateTask todo.id))
-          , onBlur address (TaskAction (EditingTask todo.id False))
-          , onEnter address (TaskAction (EditingTask todo.id False))
+          , on "input" targetValue (Signal.message address << (UpdateTask todo.id))
+          , onBlur address ((EditingTask todo.id False))
+          , onEnter address ((EditingTask todo.id False))
           ]
           []
       ]
 
 
-task_controls : Address Action -> String -> List Task -> Html
+task_controls : Address Task_Update -> String -> List Task -> Html
 task_controls address visibility tasks =
     let tasksCompleted = List.length (List.filter .completed tasks)
         tasksLeft = List.length tasks - tasksCompleted
@@ -279,16 +284,16 @@ task_controls address visibility tasks =
           [ class "clear-completed"
           , id "clear-completed"
           , hidden (tasksCompleted == 0)
-          , onClick address (TaskAction DeleteComplete)
+          , onClick address (DeleteComplete)
           ]
           [ text ("Clear completed (" ++ toString tasksCompleted ++ ")") ]
       ]
 
 
-task_visibilitySwap : Address Action -> String -> String -> String -> Html
+task_visibilitySwap : Address Task_Update -> String -> String -> String -> Html
 task_visibilitySwap address uri visibility actualVisibility =
     li
-      [ onClick address (TaskAction (ChangeVisibility visibility)) ]
+      [ onClick address ((ChangeVisibility visibility)) ]
       [ a [ href uri, classList [("selected", visibility == actualVisibility)] ] [ text visibility ] ]
 
 
