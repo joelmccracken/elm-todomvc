@@ -24,7 +24,7 @@ import Json.Decode as Json
 import Signal exposing (Signal, Address)
 import String
 import Window
-import EF.Task exposing (..)
+import EF.Task
 
 ---- MODEL ----
 
@@ -70,20 +70,20 @@ emptyModel =
 -- some alternatives: https://github.com/evancz/elm-architecture-tutorial/
 type Action
     = NoOp
-    | TaskAction EF.Task.Update
+    | TaskUpdate EF.Task.Update
 
 -- How we update our Model on a given Action?
 update : Action -> Model -> Model
 update action model =
     case action of
       NoOp -> model
-      TaskAction tu -> task_update tu model
+      TaskUpdate tu -> task_update tu model
 
 
 task_update : EF.Task.Update -> Model -> Model
 task_update tu model =
     case tu of
-        Add ->
+        EF.Task.Add ->
           { model |
               uid = model.uid + 1,
               newTask = "",
@@ -92,36 +92,36 @@ task_update tu model =
               then model.tasks
               else model.tasks ++ [newTask model.newTask model.uid]
           }
-        UpdateNewTask str ->
+        EF.Task.UpdateNewTask str ->
             { model | newTask = str }
 
-        EditingTask id isEditing ->
+        EF.Task.EditingTask id isEditing ->
             let updateTask t = if t.id == id then { t | editing = isEditing } else t
               in
                 { model | tasks = List.map updateTask model.tasks }
 
-        UpdateTask id task ->
+        EF.Task.UpdateTask id task ->
             let updateTask t = if t.id == id then { t | description = task } else t
             in
                 { model | tasks = List.map updateTask model.tasks }
 
-        Delete id ->
+        EF.Task.Delete id ->
             { model | tasks = List.filter (\t -> t.id /= id) model.tasks }
 
-        DeleteComplete ->
+        EF.Task.DeleteComplete ->
             { model | tasks = List.filter (not << .completed) model.tasks }
 
-        Check id isCompleted ->
+        EF.Task.Check id isCompleted ->
             let updateTask t = if t.id == id then { t | completed = isCompleted } else t
             in
                 { model | tasks = List.map updateTask model.tasks }
 
-        CheckAll isCompleted ->
+        EF.Task.CheckAll isCompleted ->
             let updateTask t = { t | completed = isCompleted }
             in
                 { model | tasks = List.map updateTask model.tasks }
 
-        ChangeVisibility visibility ->
+        EF.Task.ChangeVisibility visibility ->
             { model | visibility = visibility }
 
 ---- VIEW ----
@@ -133,7 +133,7 @@ view address model =
       , style [ ("visibility", "hidden") ]
       ]
       [
-       task_view (Signal.forwardTo address TaskAction) model
+       task_view (Signal.forwardTo address TaskUpdate) model
       , infoFooter
       ]
 
@@ -170,8 +170,8 @@ task_newTaskEntry address task =
           , autofocus True
           , value task
           , name "newTodo"
-          , on "input" targetValue (Signal.message address << (UpdateNewTask))
-          , onEnter address (Add)
+          , on "input" targetValue (Signal.message address << (EF.Task.UpdateNewTask))
+          , onEnter address (EF.Task.Add)
           ]
           []
       ]
@@ -198,7 +198,7 @@ task_list address visibility tasks =
           , type' "checkbox"
           , name "toggle"
           , checked allCompleted
-          , onClick address ((CheckAll (not allCompleted)))
+          , onClick address ((EF.Task.CheckAll (not allCompleted)))
           ]
           []
       , label
@@ -220,15 +220,15 @@ task_item address todo =
               [ class "toggle"
               , type' "checkbox"
               , checked todo.completed
-              , onClick address (Check todo.id (not todo.completed))
+              , onClick address (EF.Task.Check todo.id (not todo.completed))
               ]
               []
           , label
-              [ onDoubleClick address ((EditingTask todo.id True)) ]
+              [ onDoubleClick address ((EF.Task.EditingTask todo.id True)) ]
               [ text todo.description ]
           , button
               [ class "destroy"
-              , onClick address ((Delete todo.id))
+              , onClick address ((EF.Task.Delete todo.id))
               ]
               []
           ]
@@ -237,9 +237,9 @@ task_item address todo =
           , value todo.description
           , name "title"
           , id ("todo-" ++ toString todo.id)
-          , on "input" targetValue (Signal.message address << (UpdateTask todo.id))
-          , onBlur address ((EditingTask todo.id False))
-          , onEnter address ((EditingTask todo.id False))
+          , on "input" targetValue (Signal.message address << (EF.Task.UpdateTask todo.id))
+          , onBlur address ((EF.Task.EditingTask todo.id False))
+          , onEnter address ((EF.Task.EditingTask todo.id False))
           ]
           []
       ]
@@ -272,7 +272,7 @@ task_controls address visibility tasks =
           [ class "clear-completed"
           , id "clear-completed"
           , hidden (tasksCompleted == 0)
-          , onClick address (DeleteComplete)
+          , onClick address (EF.Task.DeleteComplete)
           ]
           [ text ("Clear completed (" ++ toString tasksCompleted ++ ")") ]
       ]
@@ -281,7 +281,7 @@ task_controls address visibility tasks =
 task_visibilitySwap : Address EF.Task.Update -> String -> String -> String -> Html
 task_visibilitySwap address uri visibility actualVisibility =
     li
-      [ onClick address ((ChangeVisibility visibility)) ]
+      [ onClick address ((EF.Task.ChangeVisibility visibility)) ]
       [ a [ href uri, classList [("selected", visibility == actualVisibility)] ] [ text visibility ] ]
 
 
@@ -329,16 +329,16 @@ port focus : Signal String
 port focus =
     let needsFocus act =
             case act of
-              TaskAction (EditingTask id bool) -> bool
+              TaskUpdate (EF.Task.EditingTask id bool) -> bool
               _ -> False
 
         toSelector act =
             case act of
-              TaskAction (EditingTask id _) -> "#todo-" ++ toString id
+              TaskUpdate (EF.Task.EditingTask id _) -> "#todo-" ++ toString id
               _ -> ""
     in
         actions.signal
-          |> Signal.filter needsFocus (TaskAction (EditingTask 0 True))
+          |> Signal.filter needsFocus (TaskUpdate (EF.Task.EditingTask 0 True))
           |> Signal.map toSelector
 
 
