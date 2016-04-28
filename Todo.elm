@@ -22,7 +22,6 @@ import Html.Events exposing (..)
 import Html.Lazy exposing (lazy, lazy2, lazy3)
 import Json.Decode as Json
 import Signal exposing (Signal, Address)
-import String
 import Window
 import EF.Task
 
@@ -54,52 +53,8 @@ update : Action -> Model -> Model
 update action model =
     case action of
       NoOp -> model
-      TaskUpdate task_act -> { model | tasks = task_update task_act model.tasks }
+      TaskUpdate taskAction -> { model | tasks = EF.Task.update taskAction model.tasks }
 
-
-task_update : EF.Task.Update -> EF.Task.Collection -> EF.Task.Collection
-task_update task_act model =
-    case task_act of
-        EF.Task.Add ->
-          { model |
-              uid = model.uid + 1,
-              newTask = "",
-              tasks =
-              if String.isEmpty model.newTask
-              then model.tasks
-              else model.tasks ++ [EF.Task.newTask model.newTask model.uid]
-          }
-        EF.Task.UpdateNewTask str ->
-            { model | newTask = str }
-
-        EF.Task.EditingTask id isEditing ->
-            let updateTask t = if t.id == id then { t | editing = isEditing } else t
-              in
-                { model | tasks = List.map updateTask model.tasks }
-
-        EF.Task.UpdateTask id task ->
-            let updateTask t = if t.id == id then { t | description = task } else t
-            in
-                { model | tasks = List.map updateTask model.tasks }
-
-        EF.Task.Delete id ->
-            { model | tasks = List.filter (\t -> t.id /= id) model.tasks }
-
-        EF.Task.DeleteComplete ->
-            { model | tasks = List.filter (not << .completed) model.tasks }
-
-        EF.Task.Check id isCompleted ->
-            let updateTask t = if t.id == id then { t | completed = isCompleted } else t
-            in
-                { model | tasks = List.map updateTask model.tasks }
-
-        EF.Task.CheckAll isCompleted ->
-            let updateTask t = { t | completed = isCompleted }
-            in
-                { model | tasks = List.map updateTask model.tasks }
-
-        EF.Task.ChangeVisibility visibility ->
-            { model | visibility = visibility }
 
 ---- VIEW ----
 
@@ -121,7 +76,7 @@ task_view address model =
     [ id "todoapp" ]
     [ lazy2 EF.Task.newTaskEntry address model.newTask
     , lazy3 task_list address model.visibility model.tasks
-    , lazy3 task_controls address model.visibility model.tasks
+    , lazy3 EF.Task.controls address model.visibility model.tasks
     ]
 
 
@@ -191,46 +146,6 @@ task_item address todo =
           ]
           []
       ]
-
-
-task_controls : Address EF.Task.Update -> String -> List EF.Task.Task -> Html
-task_controls address visibility tasks =
-    let tasksCompleted = List.length (List.filter .completed tasks)
-        tasksLeft = List.length tasks - tasksCompleted
-        item_ = if tasksLeft == 1 then " item" else " items"
-    in
-    footer
-      [ id "footer"
-      , hidden (List.isEmpty tasks)
-      ]
-      [ span
-          [ id "todo-count" ]
-          [ strong [] [ text (toString tasksLeft) ]
-          , text (item_ ++ " left")
-          ]
-      , ul
-          [ id "filters" ]
-          [ task_visibilitySwap address "#/" "All" visibility
-          , text " "
-          , task_visibilitySwap address "#/active" "Active" visibility
-          , text " "
-          , task_visibilitySwap address "#/completed" "Completed" visibility
-          ]
-      , button
-          [ class "clear-completed"
-          , id "clear-completed"
-          , hidden (tasksCompleted == 0)
-          , onClick address (EF.Task.DeleteComplete)
-          ]
-          [ text ("Clear completed (" ++ toString tasksCompleted ++ ")") ]
-      ]
-
-
-task_visibilitySwap : Address EF.Task.Update -> String -> String -> String -> Html
-task_visibilitySwap address uri visibility actualVisibility =
-    li
-      [ onClick address ((EF.Task.ChangeVisibility visibility)) ]
-      [ a [ href uri, classList [("selected", visibility == actualVisibility)] ] [ text visibility ] ]
 
 
 infoFooter : Html
