@@ -23,18 +23,21 @@ import Json.Decode as Json
 import Signal exposing (Signal, Address)
 import Window
 import EF.Task
+import EF.Project
 
 ---- MODEL ----
 
 -- The full application state of our todo app.
 type alias Model =
-    { tasks: EF.Task.Collection
+    { tasks : EF.Task.Collection
+    , projects : EF.Project.Collection
     }
 
 
 emptyModel : Model
 emptyModel =
     { tasks = EF.Task.emptyTaskCollection
+    , projects = EF.Project.emptyProjectCollection
     }
 
 
@@ -46,6 +49,7 @@ emptyModel =
 type Action
     = NoOp
     | TaskUpdate EF.Task.Update
+    | ProjectUpdate EF.Project.Update
 
 -- How we update our Model on a given Action?
 update : Action -> Model -> Model
@@ -53,7 +57,7 @@ update action model =
     case action of
       NoOp -> model
       TaskUpdate taskAction -> { model | tasks = EF.Task.update taskAction model.tasks }
-
+      ProjectUpdate projectAction -> { model | projects = EF.Project.update projectAction model.projects }
 
 ---- VIEW ----
 
@@ -63,8 +67,8 @@ view address model =
       [ class "todomvc-wrapper"
       , style [ ("visibility", "hidden") ]
       ]
-      [
-       EF.Task.view (Signal.forwardTo address TaskUpdate) model.tasks
+      [ EF.Task.view (Signal.forwardTo address TaskUpdate) model.tasks
+      , EF.Project.view (Signal.forwardTo address ProjectUpdate) model.projects
       , infoFooter
       ]
 
