@@ -26,3 +26,21 @@ type Update
     | Check Int Bool
     | CheckAll Bool
     | ChangeVisibility String
+
+
+newTask : String -> Int -> Task
+newTask desc id =
+    { description = desc
+    , completed = False
+    , editing = False
+    , id = id
+    }
+
+
+emptyTaskCollection : Collection
+emptyTaskCollection =
+  { tasks = []
+  , newTask = ""
+  , uid = 0
+  , visibility = ""
+  }

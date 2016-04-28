@@ -34,28 +34,10 @@ type alias Model =
     }
 
 
-newTask : String -> Int -> EF.Task.Task
-newTask desc id =
-    { description = desc
-    , completed = False
-    , editing = False
-    , id = id
-    }
-
-
 emptyModel : Model
 emptyModel =
-    { tasks = emptyTaskCollection
+    { tasks = EF.Task.emptyTaskCollection
     }
-
-
-emptyTaskCollection : EF.Task.Collection
-emptyTaskCollection =
-  { tasks = []
-  , newTask = ""
-  , uid = 0
-  , visibility = ""
-  }
 
 
 ---- UPDATE ----
@@ -85,7 +67,7 @@ task_update task_act model =
               tasks =
               if String.isEmpty model.newTask
               then model.tasks
-              else model.tasks ++ [newTask model.newTask model.uid]
+              else model.tasks ++ [EF.Task.newTask model.newTask model.uid]
           }
         EF.Task.UpdateNewTask str ->
             { model | newTask = str }
