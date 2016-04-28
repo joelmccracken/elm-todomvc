@@ -1,9 +1,9 @@
 module EF.Task where
 
 import Signal exposing (Signal, Address)
-import Html exposing (Html, Attribute, text, header, h1, input, a, li, button, ul, strong, span, footer)
-import Html.Attributes exposing (id, placeholder, autofocus, value, name, href, classList, hidden, class)
-import Html.Events exposing (on, targetValue, keyCode, onClick)
+import Html exposing (Html, Attribute, text, header, h1, input, a, li, button, ul, strong, span, footer, label, div, section)
+import Html.Attributes exposing (id, placeholder, autofocus, value, name, href, classList, hidden, class, type', checked, style, for)
+import Html.Events exposing (on, targetValue, keyCode, onClick, onDoubleClick, onBlur)
 import Json.Decode
 import String
 
@@ -166,3 +166,71 @@ visibilitySwap address uri visibility actualVisibility =
     li
       [ onClick address ((ChangeVisibility visibility)) ]
       [ a [ href uri, classList [("selected", visibility == actualVisibility)] ] [ text visibility ] ]
+
+
+item : Address Update -> Task -> Html
+item address todo =
+    li
+      [ classList [ ("completed", todo.completed), ("editing", todo.editing) ] ]
+      [ div
+          [ class "view" ]
+          [ input
+              [ class "toggle"
+              , type' "checkbox"
+              , checked todo.completed
+              , onClick address (Check todo.id (not todo.completed))
+              ]
+              []
+          , label
+              [ onDoubleClick address ((EditingTask todo.id True)) ]
+              [ text todo.description ]
+          , button
+              [ class "destroy"
+              , onClick address ((Delete todo.id))
+              ]
+              []
+          ]
+      , input
+          [ class "edit"
+          , value todo.description
+          , name "title"
+          , id ("todo-" ++ toString todo.id)
+          , on "input" targetValue (Signal.message address << (UpdateTask todo.id))
+          , onBlur address ((EditingTask todo.id False))
+          , onEnter address ((EditingTask todo.id False))
+          ]
+          []
+      ]
+
+
+list : Address Update -> String -> List Task -> Html
+list address visibility tasks =
+    let isVisible todo =
+            case visibility of
+              "Completed" -> todo.completed
+              "Active" -> not todo.completed
+              _ -> True
+
+        allCompleted = List.all .completed tasks
+
+        cssVisibility = if List.isEmpty tasks then "hidden" else "visible"
+    in
+    section
+      [ id "main"
+      , style [ ("visibility", cssVisibility) ]
+      ]
+      [ input
+          [ id "toggle-all"
+          , type' "checkbox"
+          , name "toggle"
+          , checked allCompleted
+          , onClick address ((CheckAll (not allCompleted)))
+          ]
+          []
+      , label
+          [ for "toggle-all" ]
+          [ text "Mark all as complete" ]
+      , ul
+          [ id "todo-list" ]
+          (List.map (item address) (List.filter isVisible tasks))
+      ]

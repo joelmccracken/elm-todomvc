@@ -75,77 +75,9 @@ task_view address model =
   section
     [ id "todoapp" ]
     [ lazy2 EF.Task.newTaskEntry address model.newTask
-    , lazy3 task_list address model.visibility model.tasks
+    , lazy3 EF.Task.list address model.visibility model.tasks
     , lazy3 EF.Task.controls address model.visibility model.tasks
     ]
-
-
-task_list : Address EF.Task.Update -> String -> List EF.Task.Task -> Html
-task_list address visibility tasks =
-    let isVisible todo =
-            case visibility of
-              "Completed" -> todo.completed
-              "Active" -> not todo.completed
-              _ -> True
-
-        allCompleted = List.all .completed tasks
-
-        cssVisibility = if List.isEmpty tasks then "hidden" else "visible"
-    in
-    section
-      [ id "main"
-      , style [ ("visibility", cssVisibility) ]
-      ]
-      [ input
-          [ id "toggle-all"
-          , type' "checkbox"
-          , name "toggle"
-          , checked allCompleted
-          , onClick address ((EF.Task.CheckAll (not allCompleted)))
-          ]
-          []
-      , label
-          [ for "toggle-all" ]
-          [ text "Mark all as complete" ]
-      , ul
-          [ id "todo-list" ]
-          (List.map (task_item address) (List.filter isVisible tasks))
-      ]
-
-
-task_item : Address EF.Task.Update -> EF.Task.Task -> Html
-task_item address todo =
-    li
-      [ classList [ ("completed", todo.completed), ("editing", todo.editing) ] ]
-      [ div
-          [ class "view" ]
-          [ input
-              [ class "toggle"
-              , type' "checkbox"
-              , checked todo.completed
-              , onClick address (EF.Task.Check todo.id (not todo.completed))
-              ]
-              []
-          , label
-              [ onDoubleClick address ((EF.Task.EditingTask todo.id True)) ]
-              [ text todo.description ]
-          , button
-              [ class "destroy"
-              , onClick address ((EF.Task.Delete todo.id))
-              ]
-              []
-          ]
-      , input
-          [ class "edit"
-          , value todo.description
-          , name "title"
-          , id ("todo-" ++ toString todo.id)
-          , on "input" targetValue (Signal.message address << (EF.Task.UpdateTask todo.id))
-          , onBlur address ((EF.Task.EditingTask todo.id False))
-          , EF.Task.onEnter address ((EF.Task.EditingTask todo.id False))
-          ]
-          []
-      ]
 
 
 infoFooter : Html
