@@ -119,40 +119,10 @@ task_view : Address EF.Task.Update -> EF.Task.Collection -> Html
 task_view address model =
   section
     [ id "todoapp" ]
-    [ lazy2 task_newTaskEntry address model.newTask
+    [ lazy2 EF.Task.newTaskEntry address model.newTask
     , lazy3 task_list address model.visibility model.tasks
     , lazy3 task_controls address model.visibility model.tasks
     ]
-
-
-onEnter : Address a -> a -> Attribute
-onEnter address value =
-    on "keydown"
-      (Json.customDecoder keyCode is13)
-      (\_ -> Signal.message address value)
-
-
-is13 : Int -> Result String ()
-is13 code =
-  if code == 13 then Ok () else Err "not the right key code"
-
-
-task_newTaskEntry : Address EF.Task.Update -> String -> Html
-task_newTaskEntry address task =
-    header
-      [ id "header" ]
-      [ h1 [] [ text "todos" ]
-      , input
-          [ id "new-todo"
-          , placeholder "What needs to be done?"
-          , autofocus True
-          , value task
-          , name "newTodo"
-          , on "input" targetValue (Signal.message address << (EF.Task.UpdateNewTask))
-          , onEnter address (EF.Task.Add)
-          ]
-          []
-      ]
 
 
 task_list : Address EF.Task.Update -> String -> List EF.Task.Task -> Html
@@ -217,7 +187,7 @@ task_item address todo =
           , id ("todo-" ++ toString todo.id)
           , on "input" targetValue (Signal.message address << (EF.Task.UpdateTask todo.id))
           , onBlur address ((EF.Task.EditingTask todo.id False))
-          , onEnter address ((EF.Task.EditingTask todo.id False))
+          , EF.Task.onEnter address ((EF.Task.EditingTask todo.id False))
           ]
           []
       ]
