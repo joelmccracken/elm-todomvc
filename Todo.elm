@@ -30,25 +30,11 @@ import EF.Task
 
 -- The full application state of our todo app.
 type alias Model =
-    { tasks: Task_Collection
-    }
-
-type alias Task_Collection =
-   { tasks: List Task
-   , newTask: String
-   , uid : Int
-   , visibility : String
-   }
-
-type alias Task =
-    { description : String
-    , completed : Bool
-    , editing : Bool
-    , id : Int
+    { tasks: EF.Task.Collection
     }
 
 
-newTask : String -> Int -> Task
+newTask : String -> Int -> EF.Task.Task
 newTask desc id =
     { description = desc
     , completed = False
@@ -63,7 +49,7 @@ emptyModel =
     }
 
 
-emptyTaskCollection : Task_Collection
+emptyTaskCollection : EF.Task.Collection
 emptyTaskCollection =
   { tasks = []
   , newTask = ""
@@ -89,7 +75,7 @@ update action model =
       TaskUpdate task_act -> { model | tasks = task_update task_act model.tasks }
 
 
-task_update : EF.Task.Update -> Task_Collection -> Task_Collection
+task_update : EF.Task.Update -> EF.Task.Collection -> EF.Task.Collection
 task_update task_act model =
     case task_act of
         EF.Task.Add ->
@@ -147,7 +133,7 @@ view address model =
       ]
 
 
-task_view : Address EF.Task.Update -> Task_Collection -> Html
+task_view : Address EF.Task.Update -> EF.Task.Collection -> Html
 task_view address model =
   section
     [ id "todoapp" ]
@@ -155,6 +141,7 @@ task_view address model =
     , lazy3 task_list address model.visibility model.tasks
     , lazy3 task_controls address model.visibility model.tasks
     ]
+
 
 onEnter : Address a -> a -> Attribute
 onEnter address value =
@@ -186,7 +173,7 @@ task_newTaskEntry address task =
       ]
 
 
-task_list : Address EF.Task.Update -> String -> List Task -> Html
+task_list : Address EF.Task.Update -> String -> List EF.Task.Task -> Html
 task_list address visibility tasks =
     let isVisible todo =
             case visibility of
@@ -219,7 +206,7 @@ task_list address visibility tasks =
       ]
 
 
-task_item : Address EF.Task.Update -> Task -> Html
+task_item : Address EF.Task.Update -> EF.Task.Task -> Html
 task_item address todo =
     li
       [ classList [ ("completed", todo.completed), ("editing", todo.editing) ] ]
@@ -254,7 +241,7 @@ task_item address todo =
       ]
 
 
-task_controls : Address EF.Task.Update -> String -> List Task -> Html
+task_controls : Address EF.Task.Update -> String -> List EF.Task.Task -> Html
 task_controls address visibility tasks =
     let tasksCompleted = List.length (List.filter .completed tasks)
         tasksLeft = List.length tasks - tasksCompleted
