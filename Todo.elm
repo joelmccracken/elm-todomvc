@@ -19,7 +19,6 @@ https://github.com/evancz/elm-architecture-tutorial/
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-import Html.Lazy exposing (lazy, lazy2, lazy3)
 import Json.Decode as Json
 import Signal exposing (Signal, Address)
 import Window
@@ -65,19 +64,9 @@ view address model =
       , style [ ("visibility", "hidden") ]
       ]
       [
-       task_view (Signal.forwardTo address TaskUpdate) model.tasks
+       EF.Task.view (Signal.forwardTo address TaskUpdate) model.tasks
       , infoFooter
       ]
-
-
-task_view : Address EF.Task.Update -> EF.Task.Collection -> Html
-task_view address model =
-  section
-    [ id "todoapp" ]
-    [ lazy2 EF.Task.newTaskEntry address model.newTask
-    , lazy3 EF.Task.list address model.visibility model.tasks
-    , lazy3 EF.Task.controls address model.visibility model.tasks
-    ]
 
 
 infoFooter : Html

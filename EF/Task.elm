@@ -6,7 +6,7 @@ import Html.Attributes exposing (id, placeholder, autofocus, value, name, href, 
 import Html.Events exposing (on, targetValue, keyCode, onClick, onDoubleClick, onBlur)
 import Json.Decode
 import String
-
+import Html.Lazy exposing (lazy, lazy2, lazy3)
 
 onEnter : Address a -> a -> Attribute
 onEnter address value =
@@ -234,3 +234,13 @@ list address visibility tasks =
           [ id "todo-list" ]
           (List.map (item address) (List.filter isVisible tasks))
       ]
+
+
+view : Address Update -> Collection -> Html
+view address model =
+  section
+    [ id "todoapp" ]
+    [ lazy2 newTaskEntry address model.newTask
+    , lazy3 list address model.visibility model.tasks
+    , lazy3 controls address model.visibility model.tasks
+    ]
