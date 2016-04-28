@@ -30,12 +30,15 @@ import EF.Task
 
 -- The full application state of our todo app.
 type alias Model =
-    { tasks : List Task
-    , newTask : String
-    , uid : Int
-    , visibility : String
+    { tasks: Task_Collection
     }
 
+type alias Task_Collection =
+   { tasks: List Task
+   , newTask: String
+   , uid : Int
+   , visibility : String
+   }
 
 type alias Task =
     { description : String
@@ -56,11 +59,17 @@ newTask desc id =
 
 emptyModel : Model
 emptyModel =
-    { tasks = []
-    , visibility = "All"
-    , newTask = ""
-    , uid = 0
+    { tasks = emptyTaskCollection
     }
+
+
+emptyTaskCollection : Task_Collection
+emptyTaskCollection =
+  { tasks = []
+  , newTask = ""
+  , uid = 0
+  , visibility = ""
+  }
 
 
 ---- UPDATE ----
@@ -77,12 +86,12 @@ update : Action -> Model -> Model
 update action model =
     case action of
       NoOp -> model
-      TaskUpdate tu -> task_update tu model
+      TaskUpdate task_act -> { model | tasks = task_update task_act model.tasks }
 
 
-task_update : EF.Task.Update -> Model -> Model
-task_update tu model =
-    case tu of
+task_update : EF.Task.Update -> Task_Collection -> Task_Collection
+task_update task_act model =
+    case task_act of
         EF.Task.Add ->
           { model |
               uid = model.uid + 1,
@@ -133,12 +142,12 @@ view address model =
       , style [ ("visibility", "hidden") ]
       ]
       [
-       task_view (Signal.forwardTo address TaskUpdate) model
+       task_view (Signal.forwardTo address TaskUpdate) model.tasks
       , infoFooter
       ]
 
 
-task_view : Address EF.Task.Update -> Model -> Html
+task_view : Address EF.Task.Update -> Task_Collection -> Html
 task_view address model =
   section
     [ id "todoapp" ]
