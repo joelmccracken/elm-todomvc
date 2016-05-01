@@ -1,18 +1,25 @@
 module EF.Task where
 
 import Signal exposing (Signal, Address)
-import Html exposing (Html, Attribute, text, header, h1, input, a, li, button, ul, strong, span, footer, label, div, section)
+import Html exposing (Html, Attribute, text, header, h1, input, a, li, button, ul, strong, span, footer, label, div, section, select, option)
 import Html.Attributes exposing (id, placeholder, autofocus, value, name, href, classList, hidden, class, type', checked, style, for)
 import Html.Events exposing (on, targetValue, keyCode, onClick, onDoubleClick, onBlur)
 import Json.Decode
 import String
 import Html.Lazy exposing (lazy, lazy2, lazy3)
 
+
 onEnter : Address a -> a -> Attribute
 onEnter address value =
     on "keydown"
       (Json.Decode.customDecoder keyCode is13)
-      (\_ -> Signal.message address value)
+      (\_-> Signal.message address value)
+
+
+onChange : Address a -> a -> Attribute
+onChange address value =
+    on "change" Json.Decode.int
+         (\-> Signal.message address (value ))
 
 
 is13 : Int -> Result String ()
@@ -41,6 +48,7 @@ type Update
     | EditingTask Int Bool
     | UpdateTask Int String
     | Add
+    | UpdateProject
     | Delete Int
     | DeleteComplete
     | Check Int Bool
@@ -81,6 +89,11 @@ newTaskEntry address task =
           , onEnter address (Add)
           ]
           []
+      , select
+          [ onChange address UpdateProject]
+          [ option [value "1"] [text "whatever"]
+          , option [value "2"] [text "wherever"]
+          ]
       ]
 
 update : Update -> Collection -> Collection
@@ -95,6 +108,7 @@ update action model =
               then model.tasks
               else model.tasks ++ [newTask model.newTask model.uid]
           }
+        UpdateProject -> model
         UpdateNewTask str ->
             { model | newTask = str }
 
