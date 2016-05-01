@@ -19,7 +19,7 @@ onEnter address value =
 onChange : Address a -> a -> Attribute
 onChange address value =
     on "change" Json.Decode.int
-         (\-> Signal.message address (value ))
+         (\_-> Signal.message address (value ))
 
 
 is13 : Int -> Result String ()
