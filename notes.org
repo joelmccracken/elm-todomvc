@@ -1,0 +1,26 @@
+
+Some notes:
+
+model:
+
+choices:
+
+list of projects, each with an ID
+list of tasks, each with an project ID that the task belongs to
+default project == "Misc Actions"?
+
+
+-- OR --
+
+list of projects/action lists
+  projects have many actions
+
+
+
+
+plan:
+referece things to each other by IDs
+
+factor all models into a model module
+use common model module to structure views
+(probably will move all the views into their own view file)

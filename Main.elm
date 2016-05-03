@@ -24,6 +24,9 @@ import Signal exposing (Signal, Address)
 import Window
 import EF.Task
 import EF.Project
+import EF.Model
+import EF.View
+import EF.ViewModel
 
 ---- MODEL ----
 
@@ -31,15 +34,27 @@ import EF.Project
 type alias Model =
     { tasks : EF.Task.Collection
     , projects : EF.Project.Collection
+    , nested   : Model2
     }
 
+type alias Model2 =
+  { model : EF.Model.Model
+  , viewModel : EF.View.Model  }
+
+emptyModel2 : Model2
+emptyModel2 =
+  let model' = EF.Model.empty
+  in
+  { model = model'
+  , viewModel = EF.ViewModel.empty model'
+  }
 
 emptyModel : Model
 emptyModel =
-    { tasks = EF.Task.emptyTaskCollection
-    , projects = EF.Project.emptyProjectCollection
-    }
-
+  { tasks = EF.Task.emptyTaskCollection
+  , projects = EF.Project.emptyProjectCollection
+  , nested = emptyModel2
+  }
 
 ---- UPDATE ----
 
