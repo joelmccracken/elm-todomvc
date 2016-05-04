@@ -8,11 +8,11 @@ import Json.Decode
 import Html.Lazy exposing (lazy, lazy2, lazy3)
 
 import EF.Model as Model
-import EF.ViewModel as VM
+import EF.ViewModel exposing (ViewModel)
 import EF.Update as Update
 
 
-view : Address Update.TaskAction -> VM.Model -> Html
+view : Address Update.TaskAction -> ViewModel -> Html
 view address model =
   section
     [ id "todoapp" ]
@@ -22,7 +22,7 @@ view address model =
     ]
 
 
-newTaskEntry : Address Update.TaskAction -> VM.Model -> Html
+newTaskEntry : Address Update.TaskAction -> ViewModel -> Html
 newTaskEntry address viewModel =
     header
       [ id "header" ]
@@ -51,7 +51,7 @@ onChange address value =
 
 
 
-controls : Address Update.TaskAction -> String -> VM.Model -> Html
+controls : Address Update.TaskAction -> String -> ViewModel -> Html
 controls address visibility viewModel =
     let tasks = VM.tasks viewModel
         tasksCompleted = List.length (List.filter (VM.isCompleted viewModel) tasks)
@@ -127,7 +127,7 @@ item address todo =
       ]
 
 
-list : Address Update.TaskAction -> String -> VM.Model -> Html
+list : Address Update.TaskAction -> String -> ViewModel -> Html
 list address visibility vmodel =
     let isVisible todo =
             case visibility of
