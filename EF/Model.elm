@@ -41,14 +41,6 @@ newTask desc id =
   , projectID = Nothing
   }
 
--- emptyTaskCollection : Collection
--- emptyTaskCollection =
---   { tasks = []
---   , newTask = ""
---   , uid = 0
---   , visibility = ""
---   }
-
 
 empty : Model
 empty =
