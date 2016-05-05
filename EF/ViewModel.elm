@@ -54,7 +54,7 @@ isEditing vmodel vtask =
 setEditing : ViewModel -> Int -> Bool -> ViewModel
 setEditing vmodel id isEditing =
   { vmodel |
-      taskEditing = Dict.insert(id, isEditing, vmodel.taskEditing)
+      taskEditing = Dict.insert id isEditing vmodel.taskEditing
   }
 
 
