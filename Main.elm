@@ -140,9 +140,8 @@ port focus =
           |> Signal.filter needsFocus (TaskUpdate (EF.Task.EditingTask 0 True))
           |> Signal.map toSelector
 
-
 -- interactions with localStorage to save the model
--- port getStorage : Maybe Model
+port getStorage : Maybe Model
 
--- port setStorage : Signal Model
--- port setStorage = model
+port setStorage : Signal Model
+port setStorage = model

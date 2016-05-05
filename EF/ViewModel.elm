@@ -3,7 +3,30 @@ module EF.ViewModel where
 import EF.Model as M
 
 import List
-import Dict
+
+alist_find : a -> AssocList a b -> Maybe b
+alist_find key alist =
+   let matching      = List.filter (\ (k, v)-> k == key) alist
+       firstMatching = List.head matching
+   in Maybe.map (\ (a,b)->b) firstMatching
+
+
+alist_add : a -> b -> AssocList a b -> AssocList a b
+alist_add a b alist = (a, b) :: alist
+
+alist_update : a -> b -> AssocList a b -> AssocList a b
+alist_update key value alist =
+  let updateIfKey = \ (k, v)-> if k == key then (k, value) else (k, v)
+  in List.map updateIfKey alist
+
+
+alist_addOrUpdate : a -> b -> AssocList a b -> AssocList a b
+alist_addOrUpdate k v alist =
+  case alist_find k alist of
+    Just _ ->  alist_update k v alist
+    Nothing -> alist_add k v alist
+
+type alias AssocList a b = List (a, b)
 
 type alias ViewTask =
   { task       : M.Task
@@ -14,17 +37,20 @@ type alias ViewTask =
 type alias ViewModel =
   { newTask        : String
   , newTaskProject : Maybe Int
-  , taskEditing    : Dict.Dict Int Bool
+  , taskEditing    : AssocList Int Bool
   , taskVisibility : String
   , model          : M.Model
   }
+
+
+
 
 
 empty : M.Model -> ViewModel
 empty model =
   { newTask = ""
   , newTaskProject = Nothing
-  , taskEditing    = Dict.empty
+  , taskEditing    = []
   , taskVisibility = ""
   , model = model
   }
@@ -32,7 +58,7 @@ empty model =
 
 isEditing : ViewModel -> M.Task -> Bool
 isEditing vmodel vtask =
-  case (Dict.get vtask.id vmodel.taskEditing) of
+  case alist_find vtask.id vmodel.taskEditing of
     Just v  -> v
     Nothing -> False
 
@@ -40,7 +66,7 @@ isEditing vmodel vtask =
 setEditing : ViewModel -> Int -> Bool -> ViewModel
 setEditing vmodel id isEditing =
   { vmodel |
-      taskEditing = Dict.insert id isEditing vmodel.taskEditing
+      taskEditing = alist_addOrUpdate id isEditing vmodel.taskEditing
   }
 
 
