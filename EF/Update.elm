@@ -11,13 +11,13 @@ type TaskAction
     | UpdateNewTaskProject (Maybe Int)
     | CreateNewTask
     | EditingTask Int Bool
-    -- | UpdateTask Int String
-    -- | UpdateTaskProject Int Int
-    -- | DeleteTask Int
-    -- | DeleteTaskComplete
-    -- | CheckTask Int Bool
-    -- | CheckAllTask Bool
-    -- | ChangeVisibilityTask String
+    | UpdateTask Int String
+    | UpdateTaskProject Int Int
+    | DeleteTask Int
+    | DeleteTaskComplete
+    | CheckTask Int Bool
+    | CheckAllTask Bool
+    | ChangeVisibilityTask String
 
 
 type ProjectAction
@@ -48,35 +48,34 @@ taskUpdate action model viewModel =
         EditingTask id isEditing ->
           (model, VM.setEditing viewModel id isEditing)
 
-        -- updatetaskproject taskid projectid -> (model, viewmodel)
+        UpdateTaskProject taskid projectid -> (model, viewModel)
 
+        UpdateTask id newDescription ->
+          let updateTask t = if t.id == id
+                             then { t | description = newDescription }
+                             else t
+          in
+            ({ model | tasks = List.map updateTask model.tasks }, viewModel)
 
-        -- UpdateTask id newDescription ->
-        --   let updateTask t = if t.id == id
-        --                      then { t | description = newDescription }
-        --                      else t
-        --   in
-        --     ({ model | tasks = List.map updateTask model.tasks }, viewModel)
+        DeleteTask id ->
+          let newModel = { model | tasks = List.filter (\t -> t.id /= id) model.tasks }
+          in (newModel, viewModel)
 
-        -- DeleteTask id ->
-        --   let newModel = { model | tasks = List.filter (\t -> t.id /= id) model.tasks }
-        --   in (newModel, viewModel)
+        DeleteTaskComplete ->
+          let newModel = { model | tasks = List.filter (not << .completed) model.tasks }
+          in (newModel, viewModel)
 
-        -- DeleteTaskComplete ->
-        --   let newModel = { model | tasks = List.filter (not << .completed) model.tasks }
-        --   in (newModel, viewModel)
+        CheckTask id isCompleted ->
+          let updateTask t = if t.id == id then { t | completed = isCompleted } else t
+          in
+            ( { model | tasks = List.map updateTask model.tasks }
+            , viewModel
+            )
 
-        -- CheckTask id isCompleted ->
-        --   let updateTask t = if t.id == id then { t | completed = isCompleted } else t
-        --   in
-        --     ( { model | tasks = List.map updateTask model.tasks }
-        --     , viewModel
-        --     )
+        CheckAllTask isCompleted ->
+          let updateTask t = { t | completed = isCompleted }
+          in
+            ({ model | tasks = List.map updateTask model.tasks }, viewModel)
 
-        -- CheckAllTask isCompleted ->
-        --   let updateTask t = { t | completed = isCompleted }
-        --   in
-        --     ({ model | tasks = List.map updateTask model.tasks }, viewModel)
-
-        -- ChangeVisibilityTask visibility ->
-        --   (model, { viewModel | taskVisibility = visibility })
+        ChangeVisibilityTask visibility ->
+          (model, { viewModel | taskVisibility = visibility })

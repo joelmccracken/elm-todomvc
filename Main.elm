@@ -18,15 +18,11 @@ https://github.com/evancz/elm-architecture-tutorial/
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Html.Events exposing (..)
-import Json.Decode as Json
 import Signal exposing (Signal, Address)
-import Window
 import EF.Task
 import EF.Project
 import EF.Model
-import EF.View
-import EF.ViewModel
+import EF.ViewModel exposing (ViewModel)
 
 ---- MODEL ----
 
@@ -39,7 +35,7 @@ type alias Model =
 
 type alias Model2 =
   { model : EF.Model.Model
-  , viewModel : EF.View.Model  }
+  , viewModel : ViewModel  }
 
 emptyModel2 : Model2
 emptyModel2 =
@@ -119,8 +115,8 @@ model =
 
 initialModel : Model
 initialModel =
-  Maybe.withDefault emptyModel getStorage
-
+  -- Maybe.withDefault emptyModel getStorage
+  emptyModel
 
 -- actions from user input
 actions : Signal.Mailbox Action
@@ -146,7 +142,7 @@ port focus =
 
 
 -- interactions with localStorage to save the model
-port getStorage : Maybe Model
+-- port getStorage : Maybe Model
 
-port setStorage : Signal Model
-port setStorage = model
+-- port setStorage : Signal Model
+-- port setStorage = model

@@ -30,20 +30,6 @@ empty model =
   }
 
 
--- isCompleted : Model -> Task -> Bool
--- isCompleted model task =
---   let foundTask = task |> findModelTask model
---   in case foundTask of
---        Just model -> model.completed
---        Nothing    -> False
-
--- findModelTask : Model -> ViewTask -> Maybe M.Task
--- findModelTask model task =
---   model.model.tasks
---     |> List.filter (\t-> t.id == task.task.id)
---     |> List.head
-
-
 isEditing : ViewModel -> M.Task -> Bool
 isEditing vmodel vtask =
   case (Dict.get vtask.id vmodel.taskEditing) of
@@ -81,7 +67,7 @@ tasks model = (extendModelTasks model) model.model.tasks
 --   in (mapTasks model) completed
 
 
--- isCompleted : Model -> Task -> Bool
+-- isCompleted : ViewModel -> ViewTask -> Bool
 -- isCompleted vmodel task =
 --   let isEditing = (Dict.get task vmodel.taskEditing)
 --       completion = case isEditing of
@@ -89,3 +75,17 @@ tasks model = (extendModelTasks model) model.model.tasks
 --                          Nothing -> False
 --       filtered = List.filter .completed vmodel.model.tasks
 --   in (mapTasks vmodel) filtered
+
+
+isCompleted : ViewModel -> ViewTask -> Bool
+isCompleted model task =
+  let foundTask = task |> findModelTask model
+  in case foundTask of
+       Just model -> model.completed
+       Nothing    -> False
+
+findModelTask : ViewModel -> ViewTask -> Maybe M.Task
+findModelTask model task =
+  model.model.tasks
+    |> List.filter (\t-> t.id == task.task.id)
+    |> List.head

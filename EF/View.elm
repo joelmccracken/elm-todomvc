@@ -7,8 +7,8 @@ import Html.Events exposing (on, targetValue, keyCode, onClick, onDoubleClick, o
 import Json.Decode
 import Html.Lazy exposing (lazy, lazy2, lazy3)
 
-import EF.Model as Model
 import EF.ViewModel exposing (ViewModel)
+import EF.ViewModel as VM
 import EF.Update as Update
 
 
@@ -92,36 +92,36 @@ visibilitySwap address uri visibility actualVisibility =
       [ a [ href uri, classList [("selected", visibility == actualVisibility)] ] [ text visibility ] ]
 
 
-item : Address Update.TaskAction -> Model.Task -> Html
+item : Address Update.TaskAction -> VM.ViewTask -> Html
 item address todo =
     li
-      [ classList [ ("completed", todo.completed), ("editing", todo.editing) ] ]
+      [ classList [ ("completed", todo.task.completed), ("editing", todo.editing) ] ]
       [ div
           [ class "view" ]
           [ input
               [ class "toggle"
               , type' "checkbox"
-              , checked todo.completed
-              , onClick address (Update.CheckTask todo.id (not todo.completed))
+              , checked todo.task.completed
+              , onClick address (Update.CheckTask todo.task.id (not todo.task.completed))
               ]
               []
           , label
-              [ onDoubleClick address (Update.EditingTask todo.id True) ]
-              [ text todo.description ]
+              [ onDoubleClick address (Update.EditingTask todo.task.id True) ]
+              [ text todo.task.description ]
           , button
               [ class "destroy"
-              , onClick address (Update.DeleteTask todo.id)
+              , onClick address (Update.DeleteTask todo.task.id)
               ]
               []
           ]
       , input
           [ class "edit"
-          , value todo.description
+          , value todo.task.description
           , name "title"
-          , id ("todo-" ++ toString todo.id)
-          , on "input" targetValue (Signal.message address << (Update.UpdateTask todo.id))
-          , onBlur address (Update.EditingTask todo.id False)
-          , onEnter address (Update.EditingTask todo.id False)
+          , id ("todo-" ++ toString todo.task.id)
+          , on "input" targetValue (Signal.message address << (Update.UpdateTask todo.task.id))
+          , onBlur address (Update.EditingTask todo.task.id False)
+          , onEnter address (Update.EditingTask todo.task.id False)
           ]
           []
       ]
@@ -131,11 +131,11 @@ list : Address Update.TaskAction -> String -> ViewModel -> Html
 list address visibility vmodel =
     let isVisible todo =
             case visibility of
-              "Completed" -> todo.completed
-              "Active" -> not todo.completed
+              "Completed" -> todo.task.completed
+              "Active" -> not todo.task.completed
               _ -> True
         tasks = VM.tasks vmodel
-        allCompleted = List.all VM.isCompleted VM.tasks(model)
+        allCompleted = List.all (VM.isCompleted vmodel) (VM.tasks vmodel)
 
         cssVisibility = if List.isEmpty tasks then "hidden" else "visible"
     in
@@ -156,7 +156,7 @@ list address visibility vmodel =
           [ text "Mark all as complete" ]
       , ul
           [ id "todo-list" ]
-          (List.map (item address) (List.filter isVisible vmodel))
+          (List.map (item address) (List.filter isVisible (VM.tasks vmodel)))
       ]
 
 
