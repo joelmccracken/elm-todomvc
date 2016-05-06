@@ -115,8 +115,7 @@ model =
 
 initialModel : Model
 initialModel =
-  -- Maybe.withDefault emptyModel getStorage
-  emptyModel
+  Maybe.withDefault emptyModel getStorage
 
 -- actions from user input
 actions : Signal.Mailbox Action
